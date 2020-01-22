@@ -1,0 +1,12 @@
+
+sys-contact:
+  http:
+    port: "8081"
+   
+   
+azure-db:
+    host: "cmdb.database.windows.net"
+    port: "1433"
+    user: "ankit"
+    password: "Test@123"
+    dbname: "cmdb"

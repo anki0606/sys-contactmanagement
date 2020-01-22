@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd 
+http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd">
+	<http:listener-config name="sys-contactmanagement-httpListenerConfig">
+        <http:listener-connection host="0.0.0.0" port="${sys-contact.http.port}" />
+    </http:listener-config>
+    <apikit:config name="sys-contactmanagement-config" api="resource::ad35be17-085e-4638-bb96-922d9e00b70d:sys-contactmanagement:1.0.6:raml:zip:sys-contactmanagement.raml" outboundHeadersMapName="outboundHeaders" httpStatusVarName="httpStatus" />
+    <db:config name="Database_Config" doc:name="Database Config" doc:id="646f7453-a9f0-4d34-aa2a-3b98f3bdda6b">
+        <db:mssql-connection host="${azure-db.host}" user="${azure-db.user}" password="${azure-db.password}" databaseName="${azure-db.dbname}" port="${azure-db.port}"/>
+    </db:config>
+	<configuration-properties doc:name="Configuration properties" doc:id="a347659d-67e0-4575-9248-ae0c36a98021" file="configuration.yaml" />
+    
+</mule>

@@ -1,0 +1,538 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit" xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd  http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+    <flow name="sys-contactmanagement-main">
+        <http:listener config-ref="sys-contactmanagement-httpListenerConfig" path="/api/*">
+            <http:response statusCode="#[vars.httpStatus default 200]">
+                <http:headers>#[vars.outboundHeaders default {}]</http:headers>
+            </http:response>
+            <http:error-response statusCode="#[vars.httpStatus default 500]">
+                <http:body>#[payload]</http:body>
+                <http:headers>#[vars.outboundHeaders default {}]</http:headers>
+            </http:error-response>
+        </http:listener>
+        <apikit:router config-ref="sys-contactmanagement-config" />
+        <error-handler>
+            <on-error-propagate type="APIKIT:BAD_REQUEST">
+                <ee:transform xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Bad request"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">400</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:NOT_FOUND">
+                <ee:transform xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Resource not found"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">404</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:METHOD_NOT_ALLOWED">
+                <ee:transform xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Method not allowed"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">405</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:NOT_ACCEPTABLE">
+                <ee:transform xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Not acceptable"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">406</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:UNSUPPORTED_MEDIA_TYPE">
+                <ee:transform xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Unsupported media type"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">415</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:NOT_IMPLEMENTED">
+                <ee:transform xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Not Implemented"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">501</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+        </error-handler>
+    </flow>
+    <flow name="sys-contactmanagement-console">
+        <http:listener config-ref="sys-contactmanagement-httpListenerConfig" path="/console/*">
+            <http:response statusCode="#[vars.httpStatus default 200]">
+                <http:headers>#[vars.outboundHeaders default {}]</http:headers>
+            </http:response>
+            <http:error-response statusCode="#[vars.httpStatus default 500]">
+                <http:body>#[payload]</http:body>
+                <http:headers>#[vars.outboundHeaders default {}]</http:headers>
+            </http:error-response>
+        </http:listener>
+        <apikit:console config-ref="sys-contactmanagement-config" />
+        <error-handler>
+            <on-error-propagate type="APIKIT:NOT_FOUND">
+                <ee:transform xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Resource not found"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">404</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+        </error-handler>
+    </flow>
+    <flow name="delete:\employees\(id):sys-contactmanagement-config">
+        <ee:transform doc:id="aa512f62-881d-46ab-ac00-3d5199dffa64" doc:name="extract http attribute">
+            <ee:variables>
+                <ee:set-variable variableName="id"><![CDATA[attributes.uriParams.'id']]></ee:set-variable>
+            </ee:variables>
+        </ee:transform>
+        <try doc:name="Try" doc:id="1e6c845f-b92f-4d48-8aaa-d633d1e56018" transactionalAction="ALWAYS_BEGIN">
+            <db:delete doc:name="Delete Address First " doc:id="fda185d2-6ee2-4430-aa02-82f6a5841995" config-ref="Database_Config">
+                <db:sql>DELETE FROM dbo.address WHERE emp_id = :emp_id;</db:sql>
+                <db:input-parameters><![CDATA[#[{
+ emp_id : vars.id as Number
+}]]]></db:input-parameters>
+            </db:delete>
+            <db:delete doc:name="Delete Communication Next " doc:id="df8cf1ed-a6ca-43fe-afcf-568c79f37fef" config-ref="Database_Config">
+                <db:sql>DELETE FROM dbo.communication WHERE emp_id = :emp_id;</db:sql>
+                <db:input-parameters><![CDATA[#[{
+ emp_id : vars.id as Number
+}]]]></db:input-parameters>
+            </db:delete>
+            <db:delete doc:name="Delete Finally Identification " doc:id="bc631d03-c416-4767-8073-5085559d989e" config-ref="Database_Config">
+                <db:sql>DELETE FROM dbo.identification WHERE emp_id = :emp_id;</db:sql>
+                <db:input-parameters><![CDATA[#[{
+ emp_id : vars.id as Number
+}]]]></db:input-parameters>
+            </db:delete>
+            <error-handler>
+                <on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="08353a72-9557-4c7b-b9e2-2a294a27d9e7" type="DB:CONNECTIVITY">
+                    <set-variable value="404" doc:name="Set Variable" doc:id="b37aefcd-076c-40e2-b62c-54b61cbc089b" variableName="httpStatus" />
+                    <ee:transform doc:name="Transform Message" doc:id="a79e0946-b467-4e09-89b7-cab6a403f588">
+                        <ee:message>
+                            <ee:set-payload><![CDATA[%dw 2.0
+output application/java
+---
+{
+                  "message": "DB Connection Error"
+                }]]></ee:set-payload>
+                        </ee:message>
+                    </ee:transform>
+                </on-error-propagate>
+            </error-handler>
+        </try>
+        <ee:transform xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd" doc:id="c3a5ebf0-945b-4d21-88a7-6e8aebff3ad4" doc:name="Delete is Successful">
+            <ee:message>
+                <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+  status: "OK"
+}]]></ee:set-payload>
+            </ee:message>
+        </ee:transform>
+    </flow>
+    <flow name="patch:\employees\(id):application\json:sys-contactmanagement-config">
+        <ee:transform doc:id="6d6b8e2d-54f8-4694-b993-52a9c165987e" doc:name="extract Attributes">
+            <ee:variables>
+                <ee:set-variable variableName="emp_id"><![CDATA[attributes.uriParams.'id']]></ee:set-variable>
+            </ee:variables>
+        </ee:transform>
+        <try doc:name="Try" doc:id="5fc19968-3d0e-4ccb-b867-627df52ef9c5" transactionalAction="ALWAYS_BEGIN">
+            <ee:transform doc:id="fc02ac63-36fd-47e8-95fc-ddc0f784a560" doc:name="map address">
+                <ee:variables>
+                    <ee:set-variable variableName="address"><![CDATA[%dw 2.0
+output application/java
+---
+payload.employee.address map ( address , indexOfAddress ) -> {
+	zipcode: address.zipcode,
+	unit_number: address.unit,
+	city: address.city,
+	property_type: address."type",
+	house_number: address.number,
+	state: address.state,
+	street_name: address.street
+}]]></ee:set-variable>
+                </ee:variables>
+            </ee:transform>
+            <db:bulk-update doc:name="Bulk update Address" doc:id="06a2c4ed-58a9-4ed0-85ee-a7320c57e49d" config-ref="Database_Config" target="addoutput">
+                <db:bulk-input-parameters><![CDATA[#[vars.address]]]></db:bulk-input-parameters>
+                <db:sql>UPDATE dbo.address
+SET zipcode = :zipcode, unit_number = :unit_number, city= :city , property_type = :property_type , house_number = :house_number , state =:state, street_name = :street_name
+WHERE emp_id=: emp_id;</db:sql>
+            </db:bulk-update>
+            <ee:transform doc:name="map communication" doc:id="0a9bf6a8-ea80-4c6d-abf1-cd54044290f3">
+                <ee:message />
+                <ee:variables>
+                    <ee:set-variable variableName="communication"><![CDATA[%dw 2.0
+output application/java
+---
+payload.employee.communication map ( communication , indexOfCommunication ) -> {
+	value: communication.value,
+	preferred: communication.preferred as String,
+	communication_type: communication."type"
+}]]></ee:set-variable>
+                </ee:variables>
+            </ee:transform>
+            <db:bulk-update doc:name="Bulk update Communication" doc:id="bedbef83-1aca-4991-a49c-8633a538e8bc" config-ref="Database_Config" target="commoutput">
+                <db:bulk-input-parameters><![CDATA[#[vars.communication]]]></db:bulk-input-parameters>
+                <db:sql>UPDATE dbo.communication
+SET communication_type = :communication_type, value = :value, preferred= :preferred WHERE emp_id=: emp_id;</db:sql>
+            </db:bulk-update>
+            <db:update doc:name="Update Identification" doc:id="d2c392c5-87c9-4b73-9d90-3206224ab44c" config-ref="Database_Config">
+                <db:sql>UPDATE dbo.identification
+SET first_name = :first_name, last_name = :last_name, dob= :dob , gender = :gender , title = :title
+WHERE emp_id=: emp_id;</db:sql>
+                <db:input-parameters><![CDATA[#[{
+	'first_name' : payload.employee.identification.firstName,
+	'last_name' : payload.employee.identification.lastName,
+	'dob' : payload.employee.identification.dob,
+	'gender' : payload.employee.identification.gender,
+	'title' : payload.employee.identification.title,
+	'emp_id' : vars.emp_id as Number
+	
+}]]]></db:input-parameters>
+            </db:update>
+            <error-handler>
+                <on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="e177e8e9-36bb-40d9-a7eb-493297fd9795" type="DB:QUERY_EXECUTION, EXPRESSION">
+                    <set-variable value="404" doc:name="Set Variable" doc:id="302853a6-01e7-47b1-8200-22f087b5ccf5" variableName="httStatus" />
+                    <ee:transform doc:name="Transform Message" doc:id="629cda70-462e-4d1c-8f63-d321443fced3">
+                        <ee:message>
+                            <ee:set-payload><![CDATA[%dw 2.0
+output application/java
+---
+ {
+          
+ "message": "DB Error occurred "
+ 
+ }]]></ee:set-payload>
+                        </ee:message>
+                    </ee:transform>
+                </on-error-propagate>
+                <on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="da381133-f7bb-44e2-8bcf-61b2901c88eb">
+                    <set-variable value="422" doc:name="Set Variable" doc:id="aa47e52b-f67c-4099-9edd-2d6f754295e8" variableName="httpStatus" />
+                    <ee:transform doc:name="Transform Message" doc:id="0e8b0d53-7bf4-4c4a-9e7c-196a4245fc20">
+                        <ee:message>
+                            <ee:set-payload><![CDATA[%dw 2.0
+output application/java
+---
+{
+                  "message": "DB Connection Error"
+                  
+                  }]]></ee:set-payload>
+                        </ee:message>
+                    </ee:transform>
+                </on-error-propagate>
+            </error-handler>
+        </try>
+        <ee:transform xsi:schemaLocation=" http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd" doc:id="114e349e-0cc5-4080-b1dd-6bcb1cca4e1c" doc:name="update status">
+            <ee:message>
+                <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+  status: "OK"
+}]]></ee:set-payload>
+            </ee:message>
+        </ee:transform>
+    </flow>
+    <flow name="get:\employees:sys-contactmanagement-config">
+        <logger level="INFO" message="Get All employee " />
+        <db:select doc:name="select all Employee" doc:id="ba31cda8-c3ff-480c-8590-2c7d5f91d950" config-ref="Database_Config">
+            <db:sql>SELECT id.emp_id, id.first_name , id.last_name, id.dob,id.gender ,id.title,ad.house_number ,
+ ad.street_name, ad.property_type, ad.unit_number , ad.city , ad.state , ad.zipcode ,
+comm.communication_type, comm.value , comm.preferred 
+  FROM dbo.identification id 
+  JOIN dbo.address ad
+      ON id.emp_id = ad.emp_id
+  JOIN dbo.communication comm
+      ON id.emp_id =   comm.emp_id</db:sql>
+        </db:select>
+        <ee:transform xsi:schemaLocation=" http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd" doc:id="33939316-c9a4-49d4-ac09-729cedd77ea0" doc:name="Return All employees">
+            <ee:message>
+                <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+var employee= payload groupBy (v) -> v.emp_id
+---
+employee pluck (value,key,index) -> {
+   
+        "identification":{
+            "firstName" : value[0].first_name,
+            "lastName": value[0].last_name,
+ 			"dob": value[0].dob,
+ 			"gender": value[0].gender,
+ 			"title": value[0].title          
+            },
+         "address": value filter($.street_name !=null) map {
+        "street":$.street_name,
+          "type": $.property_type,
+ 			"number": $.house_number,
+ 			"unit": $.unit_number,
+ 			"city": $.city,
+ 			"state": $.state,
+ 			"zipcode": $.zipcode
+    },  "communication": value filter($.communication_type !=null) map{
+        "value":$.value,
+         "type": $.communication_type,
+         "preferred": $.communication_type
+     }
+    }]]></ee:set-payload>
+            </ee:message>
+        </ee:transform>
+        <error-handler>
+            <on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="60c4678b-e5cc-4e6a-8870-a9e1cb5e51e7">
+                <set-variable value="404" doc:name="Set Variable" doc:id="a7535400-8a4b-4f23-94f1-fd99c0a3f2f4" variableName="httpStatus" />
+                <ee:transform doc:name="Transform Message" doc:id="fdbb9a99-ca42-4d03-ba23-ac0166886726">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/java
+---
+ 
+                {
+                  "message": "DB Connection Error"
+                  
+                  }]]></ee:set-payload>
+                    </ee:message>
+                </ee:transform>
+            </on-error-propagate>
+        </error-handler>
+    </flow>
+    <flow name="get:\employees\(id):sys-contactmanagement-config">
+        <ee:transform doc:id="0f09dacb-1dbb-482e-86b9-3ca2fdeb16dd" doc:name="extract uriparams">
+            <ee:variables>
+                <ee:set-variable variableName="id"><![CDATA[attributes.uriParams.'id']]></ee:set-variable>
+            </ee:variables>
+        </ee:transform>
+        <ee:transform doc:name="Transform Message" doc:id="60389ab4-5d1d-47c4-ae6e-63d35397dae0">
+            <ee:message />
+            <ee:variables>
+                <ee:set-variable variableName="emp_id"><![CDATA[%dw 2.0
+output application/json
+---
+vars.id]]></ee:set-variable>
+            </ee:variables>
+        </ee:transform>
+        <db:select doc:name="Select identification" doc:id="f30f70a5-825d-4573-8538-155c4f249c02" config-ref="Database_Config" target="identification" maxRows="1">
+            <db:sql>select * from dbo.identification where emp_id = :emp_id</db:sql>
+            <db:input-parameters><![CDATA[#[{
+    emp_id : vars.emp_id as Number
+}]]]></db:input-parameters>
+        </db:select>
+        <db:select doc:name="Select address " doc:id="e760d3c9-c655-43a5-bd4c-f7202983d336" config-ref="Database_Config" target="address">
+            <db:sql>select * from dbo.address where emp_id = :emp_id</db:sql>
+            <db:input-parameters><![CDATA[#[{
+    emp_id : vars.emp_id as Number
+}]]]></db:input-parameters>
+        </db:select>
+        <db:select doc:name="Select ccommunication" doc:id="3b9edcd5-1f25-4996-bd1a-5c1906496d13" config-ref="Database_Config" target="communication">
+            <db:sql>select * from dbo.communication where emp_id = :emp_id</db:sql>
+            <db:input-parameters><![CDATA[#[{
+    emp_id : vars.emp_id as Number
+}]]]></db:input-parameters>
+        </db:select>
+        <choice doc:name="Choice" doc:id="440e9b22-ee71-45c7-88f8-2738cb633f73">
+            <when expression="sizeOf(vars.identification) &gt;0">
+                <ee:transform doc:name="Transform the employee Payload" doc:id="6a5912c1-361d-4f47-908d-eeafbbe32665">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+    employee: {
+        identification: {
+            firstName: vars.identification[0].first_name default "",
+            lastName: vars.identification[0].last_name default "",
+            gender: vars.identification[0].gender default "",
+            dob: vars.identification.dob[0] default "",
+            title: vars.identification.title[0] default "",
+        },
+        address: vars.address map ( address , indexOfAddress ) -> {
+            zipcode: address.zipcode default "",
+            number: address.house_number default 0,
+            unit: address.unit_number default "",
+            city: address.city default "",
+            street: address.street_name default "",
+            state: address.state default "",
+            "type": address.property_type default ""
+        },
+        communication: vars.communication map ( communication , indexOfCommunication ) -> {
+            "type": communication.communication_type default "",
+            value: communication.value default "",
+            preferred: communication.preferred as Boolean
+        }
+    }
+}]]></ee:set-payload>
+                    </ee:message>
+                </ee:transform>
+            </when>
+            <otherwise>
+                <set-variable value="404" doc:name="Set Variable" doc:id="0830cf0b-0fb5-470f-aa8d-56890d1c50d8" variableName="httpStatus" />
+                <ee:transform doc:name="Transform Message" doc:id="cb3f64f7-1b8a-403b-92f3-63e94fc539ab">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/java
+---
+{
+   "message": "Resource not found"
+ }]]></ee:set-payload>
+                    </ee:message>
+                </ee:transform>
+            </otherwise>
+        </choice>
+        <error-handler>
+            <on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="73f4853e-512a-4ce0-bf19-969622718202">
+                <set-variable value="404" doc:name="Set Variable" doc:id="8aa8a541-3521-47bb-b7cc-9bce62c3fded" variableName="httpStatus" />
+                <ee:transform doc:name="Transform Message" doc:id="3b5c0950-34b5-4eea-9f5d-c7f4c2c1ee17">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/java
+---
+ 
+                {
+                  "message": "DB Connection Error"
+                  
+                  }]]></ee:set-payload>
+                    </ee:message>
+                </ee:transform>
+            </on-error-propagate>
+        </error-handler>
+    </flow>
+    <flow name="post:\employees:application\json:sys-contactmanagement-config">
+        <logger level="INFO" doc:name="create Employee Flow " doc:id="d4290f64-9275-4c5f-8bca-8e14e4642457" message="create Employee Flow " />
+        <try doc:name="Try" doc:id="bae014b1-77b6-4571-8782-928b8a4a4882" transactionalAction="ALWAYS_BEGIN">
+            <db:insert doc:name="Insert into Identification First" doc:id="f733f6b4-b2a5-4d1f-8e7e-b5778a5758f4" config-ref="Database_Config" target="idInsert" autoGenerateKeys="true" autoGeneratedKeysColumnNames="#[['emp_id']]">
+                <db:sql>insert into identification  (first_name, last_name, dob,title , gender) 
+Values ( :first_name, :last_name, :dob, :title , :gender)</db:sql>
+                <db:input-parameters><![CDATA[#[{
+	'first_name' : payload.employee.identification.firstName,
+	'last_name' : payload.employee.identification.lastName,
+	'dob' : payload.employee.identification.dob,
+	'title' : payload.employee.identification.title ,
+	'gender' : payload.employee.identification.gender
+}]]]></db:input-parameters>
+            </db:insert>
+            <ee:transform doc:name="map Address Array" doc:id="9802b69a-a696-41e0-8bac-6000fac05b0a">
+                <ee:message />
+                <ee:variables>
+                    <ee:set-variable variableName="address"><![CDATA[%dw 2.0
+output application/java
+---
+payload.employee.address map ( address , indexOfAddress ) -> {
+	property_type: address."type",
+	house_number: address.number,
+	street_name: address.street,
+	unit_number: address.unit,
+	city: address.city,
+	state: address.state,
+	zipcode: address.zipcode,
+	emp_id:vars.idInsert.generatedKeys.GENERATED_KEYS
+}]]></ee:set-variable>
+                </ee:variables>
+            </ee:transform>
+            <db:bulk-insert doc:name="Bulk insert to address" doc:id="6701c5c0-8d3c-41e0-859a-ba0faff31c9c" config-ref="Database_Config" target="insertaddress">
+                <db:bulk-input-parameters><![CDATA[#[vars.address]]]></db:bulk-input-parameters>
+                <db:sql>insert into address  (property_type, house_number, street_name, unit_number,city , state,zipcode,emp_id)  
+values   (:property_type, :house_number, :street_name, :unit_number, :city , :state, :zipcode, :emp_id)</db:sql>
+            </db:bulk-insert>
+            <ee:transform doc:name="map communication Array" doc:id="a26788a3-34a3-49cb-a38a-ff3cce70835d">
+                <ee:message />
+                <ee:variables>
+                    <ee:set-variable variableName="communication"><![CDATA[%dw 2.0
+output application/java
+---
+payload.employee.communication map ( communication , indexOfCommunication ) -> {
+	communication_type: communication."type",
+	value: communication.value,
+	preferred: communication.preferred as String default "false",
+	emp_id:vars.idInsert.generatedKeys.GENERATED_KEYS
+	
+}]]></ee:set-variable>
+                </ee:variables>
+            </ee:transform>
+            <db:bulk-insert doc:name="Bulk insert to communication" doc:id="99f73368-d736-4172-9fc3-76400470600f" config-ref="Database_Config">
+                <db:bulk-input-parameters><![CDATA[#[vars.communication]]]></db:bulk-input-parameters>
+                <db:sql>insert into dbo.communication  (communication_type, value, preferred ,emp_id)
+values (:communication_type, :value, :preferred,:emp_id );</db:sql>
+            </db:bulk-insert>
+            <error-handler>
+                <on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="d4a7fc18-cee2-4838-813c-17d2d92294f0" type="DB:QUERY_EXECUTION, EXPRESSION">
+                    <set-variable value="422" doc:name="Set Variable" doc:id="07d338cd-4619-411f-8af1-91ad9694d266" variableName="httStatus" />
+                    <ee:transform doc:name="Transform Message" doc:id="d1c76022-5b14-49ba-8ff8-e8845ce9a1b8">
+                        <ee:message>
+                            <ee:set-payload><![CDATA[%dw 2.0
+output application/java
+---
+ {
+          
+ "message": "Required Data has  problem"
+ 
+ }]]></ee:set-payload>
+                        </ee:message>
+                    </ee:transform>
+                </on-error-propagate>
+				<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="0cf3b65a-a7e9-41d2-85dc-fe4c6566149c" >
+					<set-variable value="404" doc:name="Set Variable" doc:id="a32f854a-55df-4871-936c-7614c3b03de3" variableName="httpStatus"/>
+					<ee:transform doc:name="Transform Message" doc:id="af959535-812f-479a-b638-a0e3e8435fe2" >
+						<ee:message >
+							<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+{
+                  "message": "DB Connection Error"
+                }]]></ee:set-payload>
+						</ee:message>
+					</ee:transform>
+				</on-error-propagate>
+            </error-handler>
+        </try>
+        <ee:transform doc:name="Employee Created" doc:id="f3205d90-dfc7-4741-b783-4c3e17dda0d9">
+            <ee:message>
+                <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"id" :vars.idInsert.generatedKeys.GENERATED_KEYS as String
+}]]></ee:set-payload>
+            </ee:message>
+        </ee:transform>
+    </flow>
+</mule>
